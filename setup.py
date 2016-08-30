@@ -13,7 +13,7 @@ setup(
     version='0.0.1.dev1',
     description='Simple API testing in Python',
     long_description=long_description,
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/danielatdattrixdotcom/pyapitest',
     author='Daniel Anderson',
     author_email='daniel@dattrix.com',
     license='BSD',
