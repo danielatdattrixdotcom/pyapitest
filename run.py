@@ -2,6 +2,3 @@
 import pyapitest
 
 errors, output = pyapitest.run('example/test.json')
-
-print errors
-print output
