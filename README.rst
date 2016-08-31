@@ -1,5 +1,4 @@
 pyapitest
 =======================
 
-Simple Python HTTP API testing
-
+Test HTTP APIs using plain configuration in JSON
