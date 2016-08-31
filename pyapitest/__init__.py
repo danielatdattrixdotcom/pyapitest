@@ -36,6 +36,30 @@ class Suite(object):
             yield Group(i)
 
 
+class GroupTests(object):
+    def __init__(self, data, parent):
+        self.parent = parent
+        self.tests = []
+        for i in data:
+            obj = operations.item_to_object(i, parent=self)
+            if isinstance(obj, Test):
+                self.tests.append(obj)
+            else:
+                setattr(self, i['type'], obj)
+
+    def run(self):
+        for t in self.tests:
+            logger.info('Test: %s' % t.label)
+            try:
+                all_passed = t.run()
+                if all_passed is False:
+                    logger.error('INCOMPLETE')
+                else:
+                    logger.info('PASS')
+            except FailedTest as e:
+                logger.error('FAIL: %s' % e.message)
+
+
 class Group(CommonTestProperties):
     def __init__(self, data):
         super(Group, self).__init__(data)
@@ -61,30 +85,6 @@ class Group(CommonTestProperties):
             gt.run()
 
 
-class GroupTests(object):
-    def __init__(self, data, parent):
-        self.parent = parent
-        self.tests = []
-        for i in data:
-            obj = operations.item_to_object(i, parent=self)
-            if isinstance(obj, Test):
-                self.tests.append(obj)
-            else:
-                setattr(self, i['type'], obj)
-
-    def run(self):
-        for t in self.tests:
-            logger.info('Test: %s' % t.label)
-            try:
-                all_passed = t.run()
-                if all_passed is False:
-                    logger.error('INCOMPLETE')
-                else:
-                    logger.info('PASS')
-            except FailedTest as e:
-                logger.error('FAIL: %s' % e.message)
-
-
 class Vars(CommonTestProperties):
     pass
 
@@ -104,6 +104,7 @@ class Test(CommonTestProperties):
         return self.parent.parent.session()
 
     def _inherit_config(self):
+        """Inherit request and response config from Group and update this object."""
         for k in ['request', 'response']:
             r_config = CaseInsensitiveDict()
             r_config.update(self.parent.parent[k])
@@ -111,6 +112,11 @@ class Test(CommonTestProperties):
             setattr(self, '%s_config' % k, r_config)
 
     def _var_replace(self, find_str):
+        """Takes any string that may contain formatting and applies vars from config. Will apply cookies if session is True.
+
+        :param find_str: String from a config file to apply any substitutions to.
+        :return: Resulting string that has had replacements carried out from var and/or cookies.
+        """
         if str != 'null' and getattr(self.parent, 'vars', None):
             v_rep = {k: v for k, v in iteritems(self.parent.vars.data)}
             v_rep.update({'cookies__%s' % k: v for k, v in self.session.cookies.items()})
@@ -119,18 +125,33 @@ class Test(CommonTestProperties):
             return find_str
 
     def _build_url(self, path):
+        """Builds request URL from self.request_config and given path (with variable substitutions run on it).
+
+        :param path: URL path
+        :return: Full URL ready for request.
+        """
         return ''.join([self.request_config['host']['scheme'],
                         self.request_config['host']['address'],
                         '/',
                         operations.url_clean(self._var_replace(path)), ])
 
     def _get_headers(self):
+        """Uses self.request_config to populate headers in dict. Variable substitutions performed on values.
+
+        :rtype: dict
+        :return: Dict of headers ready for request.
+        """
         headers = self.request_config.get('headers')
         if headers:
             headers = {k: self._var_replace(v) for k, v in headers.items()}
         return headers
 
     def _get_data(self):
+        """Uses self.request_config to get body with variable substitutions performed on the body as a whole.
+
+        :rtype: str
+        :return: Request body ready for request.
+        """
         body = self.request_config.get('body')
         data = None
         if body is not None:
@@ -143,6 +164,12 @@ class Test(CommonTestProperties):
         return data
 
     def _make_request(self, **kwargs):
+        """Prepares and performs the request. Uses path from self.request_config or from kwarg "path".
+        Wraps it all up by calling self._validate which will raise :class:`pyapitest.FailedTest`.
+
+        :param kwargs:
+        :raises: FailedTest
+        """
         req = Request(self.request_config['method'],
                       self._build_url(path=kwargs.get('path', self.request_config['host']['path'])),
                       headers=self._get_headers(),
@@ -155,6 +182,10 @@ class Test(CommonTestProperties):
         self._validate()
 
     def _validate(self):
+        """Compare response to expected from self.response_config
+
+        :raises: FailedTest
+        """
         if int(self.response.status_code) != int(self.response_config['headers']['status']):
             raise FailedTest('Returned status %s, when %s was expected' % (self.response.status_code,
                                                                            self.response_config['headers']['status']))
@@ -162,6 +193,8 @@ class Test(CommonTestProperties):
     def run(self):
         self._inherit_config()
         if isinstance(self.request_config['host']['path'], list):
+            # It's possible for path to be a list of paths instead of a string. This make it easier to specify many
+            # paths need the same expected test response.
             all_passed = True
             for url_path in self.request_config['host']['path']:
                 try:
@@ -175,9 +208,10 @@ class Test(CommonTestProperties):
             self._make_request()
 
 
-class ErrorLoghandler(logging.Handler):
+class ErrorLogHandler(logging.Handler):
+    """logging handler that stores outputs in a list, and total errors as int."""
     def __init__(self):
-        super(ErrorLoghandler, self).__init__()
+        super(ErrorLogHandler, self).__init__()
         self.output = []
         self.error_count = 0
 
@@ -189,27 +223,42 @@ class ErrorLoghandler(logging.Handler):
 
 class BaseOperations(object):
     @staticmethod
-    def url_clean(url):
-        url_parts = [part for part in url.split('/') if part != '']
-        if url.endswith('/'):
+    def url_clean(url_path):
+        """Cleans up the path of a URL by remove excess forward slashes.
+
+        :param url_path: Path portion of a URL
+        :type url_path: str
+        :rtype: str
+        :return: A URL path cleaned of excess forward slashes.
+        """
+        url_parts = [part for part in url_path.split('/') if part != '']
+        if url_path.endswith('/'):
             url_parts.append(' ')
         return '/'.join(url_parts).strip()
 
     @staticmethod
-    def recursive_update(d, u):
-        for k, v in iteritems(u):
+    def recursive_update(base_dict, dict_updates):
+        """Apply updates to a dict recursively"""
+        for k, v in iteritems(dict_updates):
             if isinstance(v, collections.Mapping):
-                r = operations.recursive_update(d.get(k, {}), v)
-                d[k] = r
+                r = operations.recursive_update(base_dict.get(k, {}), v)
+                base_dict[k] = r
             else:
-                d[k] = u[k]
-        return d
+                base_dict[k] = dict_updates[k]
+        return base_dict
 
     @staticmethod
     def item_to_object(item, **kwargs):
+        """Takes a representation of a group, test, vars from config file and initializes their object.
+
+        :param item: Representation of group, test, vars, etc.
+        :type item: dict
+        :param kwargs: Accepts optional keyword parameter parent
+        :return: Returns an object that inherits from CommonTestProperties
+        """
         types = {'group': Group,
                  'vars': Vars,
-                 'test': Test,}
+                 'test': Test, }
         return types[item['type']](item, parent=kwargs.get('parent'))
 
     @staticmethod
@@ -224,10 +273,12 @@ class BaseOperations(object):
 class JSONOperations(BaseOperations):
     @staticmethod
     def open_file(json_file):
-        """
-        Opens a json file, only a file and will try adding a .json extension. Absolute and relative paths are fine.
-        :param json_file: Path or name of JSON file to open.
-        :return:
+        """Opens a JSON file, only a file and will try adding a .json extension. Absolute and relative paths are fine.
+
+        :param json_file: Path to JSON file to open
+        :type json_file: str
+        :rtype: dict
+        :return: dict representing data contained in given JSON file
         """
         open_file = None
         json_file = os.path.abspath(json_file)
@@ -244,6 +295,13 @@ class JSONOperations(BaseOperations):
 
     @staticmethod
     def to_str(data):
+        """Takes a dict, return a string via json.dumps
+
+        :param data: dict to make into string
+        :type: data: dict
+        :rtype: str
+        :return: String from dict passed in
+        """
         return json.dumps(data)
 
 
@@ -252,12 +310,14 @@ operations = JSONOperations
 
 def run(suite_file, operations_obj=None):
     global operations
+
     if operations_obj:
         operations = operations_obj
 
-    h = ErrorLoghandler()
+    h = ErrorLogHandler()
     logger.addHandler(h)
     logger.setLevel(logging.DEBUG)
+
     suite = Suite(suite_file)
     os.chdir(os.path.dirname(os.path.abspath(suite_file)))
     for i in suite:
