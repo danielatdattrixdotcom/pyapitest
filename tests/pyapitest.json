@@ -1,0 +1,27 @@
+[
+  {
+    "type": "group",
+    "label": "pyapitest group 1 tests",
+    "data": {
+      "request": {
+        "host": {
+          "scheme": "http://",
+          "address": "localhost:8080"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response": {
+        "headers": {
+          "Content-Type": "application/json",
+          "Status": 200
+        }
+      }
+    },
+    "session": true,
+    "items": [
+      "http_basic_checks"
+    ]
+  }
+]

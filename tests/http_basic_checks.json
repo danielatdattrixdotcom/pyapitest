@@ -1,0 +1,88 @@
+[
+  {
+    "type": "test",
+    "label": "Single Path GET 200",
+    "data": {
+      "request": {
+        "method": "GET",
+        "host": {
+          "path": "/"
+        }
+      },
+      "response": {
+        "headers": {
+          "status": 200
+        }
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Multi Path GET 200",
+    "data": {
+      "request": {
+        "method": "GET",
+        "host": {
+          "path": ["/", "/return_status/200"]
+        }
+      },
+      "response": {
+        "headers": {
+          "status": 200
+        }
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Single Path POST 403",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/return_status/403"
+        }
+      },
+      "response": {
+        "headers": {
+          "status": 403
+        }
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Multi Path POST 403",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": ["/return_named/forbidden", "/return_status/403"]
+        }
+      },
+      "response": {
+        "headers": {
+          "status": 403
+        }
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Single Path POST 403. Body from file.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/return_status/403"
+        },
+        "body": "bodies/cake.json"
+      },
+      "response": {
+        "headers": {
+          "status": 403
+        }
+      }
+    }
+  }
+]

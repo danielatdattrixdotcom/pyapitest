@@ -190,6 +190,13 @@ class Test(CommonTestProperties):
             raise FailedTest('Returned status %s, when %s was expected' % (self.response.status_code,
                                                                            self.response_config['headers']['status']))
 
+        if str(self.response.headers['content-type']) != str(self.response_config['headers']['content-type']):
+            raise FailedTest('Returned Content-Type %s, when %s was expected' % (self.response.headers['content-type'],
+                                                                                 self.response_config['headers'][
+                                                                                     'content-type']))
+        if self.response_config.get('body') and str(self.response_config.get('body')) != str(self.response.text):
+            raise FailedTest('Returned unexpected body')
+
     def run(self):
         self._inherit_config()
         if isinstance(self.request_config['host']['path'], list):
@@ -291,7 +298,7 @@ class JSONOperations(BaseOperations):
         if open_file is None:
             raise IOError('File %s not located' % json_file)
         else:
-            return json.load(open(open_file))
+            return json.load(open(open_file), object_hook=CaseInsensitiveDict)
 
     @staticmethod
     def to_str(data):
