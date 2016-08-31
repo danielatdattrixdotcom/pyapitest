@@ -1,3 +1,6 @@
 env/
 .idea/
+pyapitest.egg-info/
+build/
+dist/
 *.pyc
