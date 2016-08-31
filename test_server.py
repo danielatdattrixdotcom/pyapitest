@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from bottle import Bottle, run, abort, HTTPResponse, request, HTTP_CODES
 from six import iteritems
