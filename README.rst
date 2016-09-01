@@ -13,7 +13,7 @@ Test HTTP APIs using plain configuration in JSON.
 Objectives
 ==========
 - Create a HTTP request testing tool that is uses tests written soley in JSON.
-- Make configurations simple, non-repetative and matched to parameters passed to requests
+- Make configurations simple, non-repetitive and matched to parameters passed to requests
 - Be a tool to use within the testing framework of the users' choice, not provide a standalone solution.
 
 
