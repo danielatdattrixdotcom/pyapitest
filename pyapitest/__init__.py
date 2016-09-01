@@ -57,7 +57,7 @@ class GroupTests(object):
                 else:
                     logger.info('PASS')
             except FailedTest as e:
-                logger.error('FAIL: %s' % e.message)
+                logger.error('FAIL: %s' % str(e))
 
 
 class Group(CommonTestProperties):
@@ -186,14 +186,14 @@ class Test(CommonTestProperties):
 
         :raises: FailedTest
         """
-        if int(self.response.status_code) != int(self.response_config['headers']['status']):
+        if int(self.response.status_code) != int(self.response_config['status']):
             raise FailedTest('Returned status %s, when %s was expected' % (self.response.status_code,
-                                                                           self.response_config['headers']['status']))
+                                                                           self.response_config['status']))
 
-        if str(self.response.headers['content-type']) != str(self.response_config['headers']['content-type']):
-            raise FailedTest('Returned Content-Type %s, when %s was expected' % (self.response.headers['content-type'],
+        if str(self.response.headers['Content-Type']) != str(self.response_config['headers']['Content-Type']):
+            raise FailedTest('Returned Content-Type %s, when %s was expected' % (self.response.headers['Content-Type'],
                                                                                  self.response_config['headers'][
-                                                                                     'content-type']))
+                                                                                     'Content-Type']))
         if self.response_config.get('body') and str(self.response_config.get('body')) != str(self.response.text):
             raise FailedTest('Returned unexpected body')
 
@@ -209,7 +209,7 @@ class Test(CommonTestProperties):
                     logger.info('PASS [%s]' % url_path)
                 except FailedTest as e:
                     all_passed = False
-                    logger.error('FAIL: %s [%s]' % (e.message, url_path))
+                    logger.error('FAIL: %s [%s]' % (str(e), url_path))
             return all_passed
         else:
             self._make_request()
@@ -298,7 +298,7 @@ class JSONOperations(BaseOperations):
         if open_file is None:
             raise IOError('File %s not located' % json_file)
         else:
-            return json.load(open(open_file), object_hook=CaseInsensitiveDict)
+            return json.load(open(open_file))
 
     @staticmethod
     def to_str(data):

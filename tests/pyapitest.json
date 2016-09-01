@@ -13,9 +13,9 @@
         }
       },
       "response": {
+        "status": 200,
         "headers": {
-          "Content-Type": "application/json",
-          "Status": 200
+          "Content-Type": "application/json"
         }
       }
     },

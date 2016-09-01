@@ -10,9 +10,7 @@
         }
       },
       "response": {
-        "headers": {
-          "status": 200
-        }
+        "status": 200
       }
     }
   },
@@ -27,9 +25,7 @@
         }
       },
       "response": {
-        "headers": {
-          "status": 200
-        }
+        "status": 200
       }
     }
   },
@@ -44,9 +40,7 @@
         }
       },
       "response": {
-        "headers": {
-          "status": 403
-        }
+        "status": 403
       }
     }
   },
@@ -61,9 +55,7 @@
         }
       },
       "response": {
-        "headers": {
-          "status": 403
-        }
+        "status": 403
       }
     }
   },
@@ -79,9 +71,7 @@
         "body": "bodies/cake.json"
       },
       "response": {
-        "headers": {
-          "status": 403
-        }
+        "status": 403
       }
     }
   }
