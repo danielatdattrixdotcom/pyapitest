@@ -12,7 +12,7 @@ install:
   - pip install bottle
 
 before_script:
-  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/pyapitest_bottle.pid --make-pidfile --background --exec test_server.py"
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/pyapitest_bottle.pid --make-pidfile --background --exec $HOME/test_server.py"
   - sleep 5
 
 script: py.test run_tests.py
