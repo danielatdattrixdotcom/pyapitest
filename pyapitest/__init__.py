@@ -190,10 +190,12 @@ class Test(CommonTestProperties):
             raise FailedTest('Returned status %s, when %s was expected' % (self.response.status_code,
                                                                            self.response_config['status']))
 
-        if str(self.response.headers['Content-Type']) != str(self.response_config['headers']['Content-Type']):
-            raise FailedTest('Returned Content-Type %s, when %s was expected' % (self.response.headers['Content-Type'],
-                                                                                 self.response_config['headers'][
-                                                                                     'Content-Type']))
+        for name, value in iteritems(self.response_config['headers']):
+            if str(self.response.headers.get(name)) != str(value):
+                raise FailedTest('Header %s is "%s", when "%s" was expected' % (name,
+                                                                                self.response.headers.get(name),
+                                                                                value))
+
         if self.response_config.get('body') and str(self.response_config.get('body')) != str(self.response.text):
             raise FailedTest('Returned unexpected body')
 
