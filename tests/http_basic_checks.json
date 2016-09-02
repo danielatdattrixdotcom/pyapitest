@@ -22,7 +22,11 @@
         "method": "GET",
         "host": {
           "path": ["/", "/return_status/200"]
+        },
+        "headers": {
+          "Content-Type": "text/plain"
         }
+
       },
       "response": {
         "status": 200

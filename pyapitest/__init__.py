@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+import copy
 import collections
 import logging
 import os
@@ -107,7 +108,7 @@ class Test(CommonTestProperties):
         """Inherit request and response config from Group and update this object."""
         for k in ['request', 'response']:
             r_config = CaseInsensitiveDict()
-            r_config.update(self.parent.parent[k])
+            r_config.update(copy.deepcopy(self.parent.parent[k]))
             try:
                 r_config = operations.recursive_update(r_config, self[k])
             except KeyError:
@@ -177,7 +178,7 @@ class Test(CommonTestProperties):
                       self._build_url(path=kwargs.get('path', self.request_config['host']['path'])),
                       headers=self._get_headers(),
                       data=self._get_data())
-
+        logger.debug(self._get_headers())
         prep_req = self.session.prepare_request(req)
         # Set this up to prepare for some type of pre-send hook
 
