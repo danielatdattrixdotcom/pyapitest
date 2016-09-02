@@ -108,7 +108,10 @@ class Test(CommonTestProperties):
         for k in ['request', 'response']:
             r_config = CaseInsensitiveDict()
             r_config.update(self.parent.parent[k])
-            r_config = operations.recursive_update(r_config, self[k])
+            try:
+                r_config = operations.recursive_update(r_config, self[k])
+            except KeyError:
+                pass
             setattr(self, '%s_config' % k, r_config)
 
     def _var_replace(self, find_str):
@@ -186,15 +189,16 @@ class Test(CommonTestProperties):
 
         :raises: FailedTest
         """
-        if int(self.response.status_code) != int(self.response_config['status']):
+        if self.response_config.get('status') and int(self.response.status_code) != int(self.response_config['status']):
             raise FailedTest('Returned status %s, when %s was expected' % (self.response.status_code,
                                                                            self.response_config['status']))
 
-        for name, value in iteritems(self.response_config['headers']):
-            if str(self.response.headers.get(name)) != str(value):
-                raise FailedTest('Header %s is "%s", when "%s" was expected' % (name,
-                                                                                self.response.headers.get(name),
-                                                                                value))
+        if self.response_config.get('headers'):
+            for name, value in iteritems(self.response_config['headers']):
+                if str(self.response.headers.get(name)) != str(value):
+                    raise FailedTest('Header %s is "%s", when "%s" was expected' % (name,
+                                                                                    self.response.headers.get(name),
+                                                                                    value))
 
         if self.response_config.get('body') and str(self.response_config.get('body')) != str(self.response.text):
             raise FailedTest('Returned unexpected body')

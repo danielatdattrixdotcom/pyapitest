@@ -1,0 +1,13 @@
+[
+  {
+    "type": "test",
+    "label": "Minimal GET 200",
+    "data": {
+      "request": {
+        "host": {
+          "path": "/"
+        }
+      }
+    }
+  }
+]

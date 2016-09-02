@@ -1,7 +1,27 @@
 [
   {
     "type": "group",
-    "label": "pyapitest group 1 tests",
+    "label": "pyapitest minimal config tests",
+    "data": {
+      "request": {
+        "method": "GET",
+        "host": {
+          "scheme": "http://",
+          "address": "localhost:8080"
+        }
+      },
+      "response": {
+        "status": 200
+      }
+    },
+    "session": false,
+    "items": [
+      "minimal_test"
+    ]
+  },
+  {
+    "type": "group",
+    "label": "pyapitest tests",
     "data": {
       "request": {
         "host": {
