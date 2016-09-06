@@ -32,5 +32,5 @@ setup(
     ],
     keywords='api testing json',
     packages=['pyapitest'],
-    install_requires=['requests', 'cerberus', 'six'],
+    install_requires=['requests', 'Cerberus', 'six'],
 )
