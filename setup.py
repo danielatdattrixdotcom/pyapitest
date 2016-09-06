@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='pyapitest',
-    version='0.0.1.dev3',
+    version='0.0.1.dev4',
     description='Simple API testing in Python',
     long_description=long_description,
     url='https://github.com/danielatdattrixdotcom/pyapitest',
@@ -32,5 +32,5 @@ setup(
     ],
     keywords='api testing json',
     packages=['pyapitest'],
-    install_requires=['requests', 'jsonschema', 'jmespath', 'six'],
+    install_requires=['requests', 'cerberus', 'six'],
 )

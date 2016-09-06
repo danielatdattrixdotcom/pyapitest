@@ -1,9 +1,9 @@
 .. image:: https://travis-ci.org/danielatdattrixdotcom/pyapitest.svg?branch=master
     :target: https://travis-ci.org/danielatdattrixdotcom/pyapitest
-    
+
 .. image:: https://badge.fury.io/py/pyapitest.svg
     :target: https://badge.fury.io/py/pyapitest
-    
+
 
 pyapitest
 =========
@@ -26,11 +26,11 @@ Development/Testing
 ===================
 ::
 
-    pip install pytest bottle six requests jsonschema jmespath
-    
+    pip install pytest bottle six requests cerberus
+
 You'll find a script for running tests, and a test HTTP server in the root of the repo.
-    
-    
+
+
 Acknowledgements
 ================
 I thought the YAML configs used for `pyresttest <https://github.com/svanoort/pyresttest>`_ were a clean way to write tests for API endpoints, but wanted to make a tool more easily maintained.

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import copy
 import collections
-import logging
-import os
+import copy
 import json
+import logging
+
+import os
+from cerberus import Validator, SchemaError
 from requests import Request, Session
 from requests.structures import CaseInsensitiveDict
-from six import iteritems
+from six import iteritems, string_types
 
 logger = logging.getLogger(__name__)
 
@@ -162,9 +164,13 @@ class Test(CommonTestProperties):
             if isinstance(body, (dict, list)):
                 # If body data is a dict or list this is a formatted request in the test file itself.
                 data = self._var_replace(operations.to_str(body))
-            elif isinstance(body, str):
+            elif isinstance(body, string_types):
                 # If body is a str, the assumption will be made it is a file reference.
-                data = self._var_replace(operations.to_str(operations.open_file(body)))
+                try:
+                    data = self._var_replace(operations.to_str(operations.open_file(body)))
+                except IOError:
+                    # Fall back to just treating the string as a literal serialized form of the object.
+                    data = self._var_replace(operations.to_str(body))
         return data
 
     def _make_request(self, **kwargs):
@@ -178,7 +184,7 @@ class Test(CommonTestProperties):
                       self._build_url(path=kwargs.get('path', self.request_config['host']['path'])),
                       headers=self._get_headers(),
                       data=self._get_data())
-        logger.debug(self._get_headers())
+
         prep_req = self.session.prepare_request(req)
         # Set this up to prepare for some type of pre-send hook
 
@@ -201,8 +207,9 @@ class Test(CommonTestProperties):
                                                                                     self.response.headers.get(name),
                                                                                     value))
 
-        if self.response_config.get('body') and str(self.response_config.get('body')) != str(self.response.text):
-            raise FailedTest('Returned unexpected body')
+        if self.response_config.get('body'):
+            operations.validate_response_body(self.response, self.response_config.get('body'),
+                                              validator_kwargs=self.response_config.get('validator', {}))
 
     def run(self):
         self._inherit_config()
@@ -224,6 +231,7 @@ class Test(CommonTestProperties):
 
 class ErrorLogHandler(logging.Handler):
     """logging handler that stores outputs in a list, and total errors as int."""
+
     def __init__(self):
         super(ErrorLogHandler, self).__init__()
         self.output = []
@@ -272,7 +280,7 @@ class BaseOperations(object):
         """
         types = {'group': Group,
                  'vars': Vars,
-                 'test': Test, }
+                 'test': Test,}
         return types[item['type']](item, parent=kwargs.get('parent'))
 
     @staticmethod
@@ -281,6 +289,18 @@ class BaseOperations(object):
 
     @staticmethod
     def to_str(data):
+        raise NotImplementedError
+
+    @classmethod
+    def _validate_literal_response(cls, data, expected_value):
+        raise NotImplementedError
+
+    @classmethod
+    def _validate_object_response(cls, data, expected_data, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
+    def validate_response_body(cls, response, response_config_body, **kwargs):
         raise NotImplementedError
 
 
@@ -292,6 +312,7 @@ class JSONOperations(BaseOperations):
         :param json_file: Path to JSON file to open
         :type json_file: str
         :rtype: dict
+        :raises: IOError
         :return: dict representing data contained in given JSON file
         """
         open_file = None
@@ -317,6 +338,59 @@ class JSONOperations(BaseOperations):
         :return: String from dict passed in
         """
         return json.dumps(data)
+
+    @classmethod
+    def _validate_literal_response(cls, data, expected_value):
+        """Validates response body purely as identical strings.
+
+        :param data: String of response text
+        :param expected_value: Expected response text
+        """
+        if str(data) != str(expected_value):
+            raise FailedTest('Literal string response failure.')
+
+    @classmethod
+    def _validate_object_response(cls, data, expected_data, **kwargs):
+        """Validates the literal string representation of a response, or uses Cerberus to validate.
+
+        :param data: Response data to validate
+        :param expected_data: Dict to validate via Cerberus or literal comparison
+        :param kwargs: Accpts validator_kwargs to pass along to cerberus.Validator
+        :return: None
+        :raises: FailedTest
+        """
+        try:
+            v = Validator(**kwargs.get('validator_kwargs', {}))
+            if not v.validate(data, schema=expected_data):
+                raise FailedTest('Validated schema failure (%s).' % str(v.errors))
+        except SchemaError:
+            if cls.to_str(data) != cls.to_str(expected_data):
+                raise FailedTest('Literal serialized object match failure.')
+
+    @classmethod
+    def validate_response_body(cls, response, response_config_body, **kwargs):
+        """Takes response object, and response
+
+        :param response: Response object from requests
+        :param response_config_body: Value from response_config['body']  from Test object
+        :param kwargs: Accepts validator_kwargs to pass along to cerberus.Validator
+        :return: None
+        :raises: FailedTest
+        """
+        if isinstance(response_config_body, string_types):
+            try:
+                # Assume most strings are a file reference, validate.
+                json_file_validation = cls.open_file(response_config_body)
+                return cls._validate_object_response(response.json(), json_file_validation,
+                                                     validator_kwargs=kwargs.get('validator_kwargs', {}))
+            except IOError:
+                # Not a file, so we treat it as a literal response.
+                return cls._validate_literal_response(response.text, response_config_body)
+        elif isinstance(response_config_body, dict):
+            return cls._validate_object_response(response.json(), response_config_body,
+                                                 validator_kwargs=kwargs.get('validator_kwargs', {}))
+
+        raise FailedTest('No validations performed on body, but validate_response_body() called, why?')
 
 
 operations = JSONOperations

@@ -14,9 +14,12 @@ def root():
     return {}
 
 
-@app.route('/echo', method=accepted_methods)
-def root():
-    return request.body
+@app.route('/echo/<content_type_prefix>/<content_type_suffix>', method=accepted_methods)
+def root(content_type_prefix, content_type_suffix):
+    if content_type_suffix == 'json':
+        return HTTPResponse(body=request.json, content_type='/'.join([content_type_prefix, content_type_suffix]))
+    else:
+        return HTTPResponse(body=request.body.getvalue(), content_type='/'.join([content_type_prefix, content_type_suffix]))
 
 
 @app.route('/return_status/<status_code>', method=accepted_methods)

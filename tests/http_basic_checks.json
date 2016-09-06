@@ -78,5 +78,125 @@
         "status": 403
       }
     }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body and response from file.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "bodies/cake.json"
+      },
+      "response": {
+        "status": 200,
+        "body": "bodies/cake.json"
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from file, response from literal string",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "bodies/cake.json"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"cake\": \"lie\"}"
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from file, response from in-line Cerberus validation.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "bodies/cake.json"
+      },
+      "response": {
+        "status": 200,
+        "body": {"cake": {"type": "string"}}
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from file, response from Cerberus validation in file.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "bodies/cake.json"
+      },
+      "response": {
+        "status": 200,
+        "body": "validations/cerberus_cake.json"
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from in-line JSON, response from Cerberus validation in file.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": {"cake": "lie"}
+      },
+      "response": {
+        "status": 200,
+        "body": "validations/cerberus_cake.json"
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from in-line literal, response from Cerberus validation in file.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "{\"cake\": \"lie\"}"
+      },
+      "response": {
+        "status": 200,
+        "body": "validations/cerberus_cake.json"
+      }
+    }
+  },
+  {
+    "type": "test",
+    "label": "Validate single path POST 200. Body from in-line file, response from Cerberus validation in-line passing allow_unknown to cerberus.Validator.",
+    "data": {
+      "request": {
+        "method": "POST",
+        "host": {
+          "path": "/echo/application/json"
+        },
+        "body": "bodies/bastiat"
+      },
+      "response": {
+        "status": 200,
+        "body": {"candle": {"type": "boolean"}},
+        "validator": {"allow_unknown": true}
+      }
+    }
   }
 ]
