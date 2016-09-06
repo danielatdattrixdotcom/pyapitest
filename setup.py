@@ -11,7 +11,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='pyapitest',
     version='0.0.1.dev4',
-    description='Simple API testing in Python',
+    description='Test HTTP APIs using plain configuration in JSON.',
     long_description=long_description,
     url='https://github.com/danielatdattrixdotcom/pyapitest',
     author='Daniel Anderson',
