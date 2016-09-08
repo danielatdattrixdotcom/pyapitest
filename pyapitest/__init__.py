@@ -208,8 +208,11 @@ class Test(CommonTestProperties):
                                                                                     value))
 
         if self.response_config.get('body'):
-            operations.validate_response_body(self.response, self.response_config.get('body'),
-                                              validator_kwargs=self.response_config.get('validator', {}))
+            if self.response.text == '' and self.response_config.get('body') != '':
+                raise FailedTest('Response was empty when it should not have been.')
+            else:
+                operations.validate_response_body(self.response, self.response_config.get('body'),
+                                                  validator_kwargs=self.response_config.get('validator', {}))
 
     def run(self):
         self._inherit_config()
