@@ -110,8 +110,8 @@ class Test(CommonTestProperties):
         """Inherit request and response config from Group and update this object."""
         for k in ['request', 'response']:
             r_config = CaseInsensitiveDict()
-            r_config.update(copy.deepcopy(self.parent.parent[k]))
             try:
+                r_config.update(copy.deepcopy(self.parent.parent[k]))
                 r_config = operations.recursive_update(r_config, self[k])
             except KeyError:
                 pass
